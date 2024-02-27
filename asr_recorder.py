@@ -43,6 +43,7 @@ if __name__ == "__main__":
         ],
         response_callback=display_results,
         auto_start=True,
+        device_name="rockchip-es8316: dailink-multicodecs es8316.7-0011-0 (hw:2,0)"
     )
     signal.signal(signal.SIGINT, streamer.force_disconnect)
 

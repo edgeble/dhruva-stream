@@ -1,3 +1,4 @@
+import sounddevice
 import socketio
 import pyaudio
 
@@ -9,6 +10,7 @@ class Dhruva_ASR_SpeechStreamingClient_SocketIO:
         task_sequence: list,
         response_callback,
         auto_start: bool = False,
+        device_name: str ="rockchip-es8316: dailink-multicodecs es8316.7-0011-0 (hw:2,0)"
     ) -> None:
 
         # Default ASR settings
@@ -25,6 +27,7 @@ class Dhruva_ASR_SpeechStreamingClient_SocketIO:
         # assert len(task_sequence) == 1, "Only ASR task allowed in sequence"
         self.task_sequence = task_sequence
         self.response_callback = response_callback
+        self.device_name = device_name
 
         # states
         self.audio_stream = None
@@ -123,13 +126,26 @@ class Dhruva_ASR_SpeechStreamingClient_SocketIO:
     def force_disconnect(self, sig=None, frame=None) -> None:
         self.socket_client.disconnect()
     
-    def _create_audio_stream(self) -> pyaudio.Stream:
+    def _create_audio_stream(self, device_name: str) -> pyaudio.Stream:
         p = pyaudio.PyAudio()
+        input_device_index = None
+        print("Available audio devices:")
+        for i in range(p.get_device_count()):
+            device_info = p.get_device_info_by_index(i)
+            print(f"{i}: {device_info['name']}")
+            if device_info["name"] == device_name:
+                input_device_index = i
+                break
+
+        if input_device_index is None:
+           raise ValueError(f"Input device '{device_name}' not found.")
+
         stream = p.open(
             format=p.get_format_from_width(self.input_audio__bytes_per_sample),
             channels=self.input_audio__num_channels,
             rate=self.input_audio__sampling_rate,
             input=True,
+            input_device_index=input_device_index,
             output=False,
             frames_per_buffer=self.input_audio__streaming_rate,
             stream_callback=self.recorder_callback,
@@ -138,7 +154,8 @@ class Dhruva_ASR_SpeechStreamingClient_SocketIO:
     
     def start_transcribing_from_mic(self) -> None:
         self.is_speaking = True
-        self.audio_stream = self._create_audio_stream()
+        print("Device Name:", self.device_name)
+        self.audio_stream = self._create_audio_stream(self.device_name)
         print("START SPEAKING NOW!!!")
     
     def recorder_callback(self, in_data, frame_count, time_info, status_flags) -> tuple:
