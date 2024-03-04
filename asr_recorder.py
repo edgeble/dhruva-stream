@@ -8,7 +8,8 @@ def display_results(transcript_history, current_transcript):
     print("Current:", current_transcript)
 
 if __name__ == "__main__":
-    streamer = Dhruva_ASR_SpeechStreamingClient_SocketIO(
+    from turtle_helper import move_turtle
+    streamer= Dhruva_ASR_SpeechStreamingClient_SocketIO(
 
         socket_url="wss://dhruva-api.bhashini.gov.in",
 
@@ -39,6 +40,14 @@ if __name__ == "__main__":
                         "targetLanguage": "en"
                     }
                 }
+            },
+            {  
+               "taskType": "tts",
+            	"config": {
+                "language": {
+                    "sourceLanguage": "en"
+                   }
+            	}
             }
         ],
         response_callback=display_results,
@@ -47,6 +56,11 @@ if __name__ == "__main__":
     )
     signal.signal(signal.SIGINT, streamer.force_disconnect)
 
+	while True :
+    	if streamer.x : #in ["Let ' s go", "Let ' s"]:
+        	move_turtle(streamer.x)
+        	streamer.x = ''
+			
     try:
         input("(Press Enter to Stop) ")
         streamer.stop()

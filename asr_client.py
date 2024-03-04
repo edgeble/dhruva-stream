@@ -1,7 +1,9 @@
 import sounddevice
 import socketio
 import pyaudio
-
+import turtle
+import tkinter as tk
+from turtle_helper import move_turtle
 class Dhruva_ASR_SpeechStreamingClient_SocketIO:
     def __init__(
         self,
@@ -37,7 +39,9 @@ class Dhruva_ASR_SpeechStreamingClient_SocketIO:
         self.socket_client = self._get_client(
             on_ready=self.start_transcribing_from_mic if auto_start else None
         )
-
+        self.x =''
+        
+        
         self.socket_client.connect(
             url=socket_url,
             transports=["websocket", "polling"],
@@ -74,9 +78,10 @@ class Dhruva_ASR_SpeechStreamingClient_SocketIO:
         def response(response, streaming_status):
             print(response)
             print()
-            0
             if streaming_status["isIntermediateResult"]:
                 current_transcript = response["pipelineResponse"][1]["output"][0]["target"]
+                x = current_transcript
+                print('#'*10+x+'#'*10)
                 self.response_callback(self.transcript_history, current_transcript)
                 print("transcript printing")
             else:
@@ -86,7 +91,8 @@ class Dhruva_ASR_SpeechStreamingClient_SocketIO:
                 if current_transcript.strip():
                     self.transcript_history += current_transcript + '. '
                     print("transcript printing 2")
-        
+            
+            self.x = x       
         @sio.on('abort')
         def abort(message):
             print("Connection aborted with message:")
